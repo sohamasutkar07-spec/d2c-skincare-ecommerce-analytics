@@ -1,0 +1,49 @@
+D2C Skincare E-Commerce Analytics Dataset
+
+Description:
+
+This synthetic dataset simulates a D2C skincare e-commerce business and is designed for SQL, Power BI, and business analytics projects.
+
+The dataset contains relational business data across multiple tables including:
+
+- Customers
+- Products
+- Orders
+- Order Items
+- Reviews
+- Returns
+
+Relationships :
+
+- Customers.customer_id → Orders.customer_id
+- Orders.order_id → Order_Items.order_id
+- Products.product_id → Order_Items.product_id
+- Orders.order_id → Returns.order_id
+- Products.product_id → Returns.product_id
+- Customers.customer_id → Reviews.customer_id
+- Products.product_id → Reviews.product_id
+- Orders.order_id → Reviews.order_id
+
+Possible analysis use cases:
+
+- Revenue analysis
+- Customer segmentation
+- Product profitability analysis
+- Return-rate analysis
+- Customer Lifetime Value (CLV)
+- RFM analysis
+- Business intelligence dashboards
+- SQL practice projects
+
+Tools Suitable:
+
+- PostgreSQL
+- MySQL
+- SQL Server
+- Power BI
+- Tableau
+- Python (Pandas)
+
+Disclaimer:
+
+This dataset is synthetic and created for educational, portfolio, and analytics practice purposes only. It does not represent official company data.
