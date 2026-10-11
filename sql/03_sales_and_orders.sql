@@ -1,107 +1,84 @@
-/* Sales and order analysis | MySQL 8.0+ */
+/* Sales and order analyses practiced for this portfolio | MySQL 8.0+ */
 USE Skincare_analytics;
 
-/* 1. Order status mix across all orders. */
+/* 1. Count orders by status. */
 SELECT
     order_status,
-    COUNT(*) AS total_orders,
-    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS percentage_of_orders
+    COUNT(order_id) AS total_order
 FROM orders_clean
 GROUP BY order_status
-ORDER BY total_orders DESC;
+ORDER BY total_order DESC;
 
-/* 2. Delivered-order KPIs.
-   gross_amount = discounted merchandise amount in this dataset.
-   final_amount = gross_amount + shipping_fee (verified by reconciliation).
+/* 2. Percentage of all orders by status. */
+SELECT
+    order_status,
+    COUNT(*) AS total_order,
+    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS percentage_of_order
+FROM orders_clean
+GROUP BY order_status
+ORDER BY percentage_of_order DESC;
+
+/* 3. Sum final amount for delivered orders.
+   final_amount includes shipping in this dataset.
 */
 SELECT
-    COUNT(*) AS delivered_orders,
-    ROUND(SUM(gross_amount), 2) AS delivered_merchandise_revenue,
-    ROUND(SUM(final_amount), 2) AS delivered_order_value_including_shipping,
-    ROUND(AVG(final_amount), 2) AS average_delivered_order_value,
-    ROUND(AVG(gross_amount), 2) AS average_merchandise_value_per_delivered_order
+    SUM(final_amount) AS total_amount
 FROM orders_clean
 WHERE order_status = 'Delivered';
 
-/* 3. Monthly trend. Use four-digit year and numeric month for proper sorting. */
+/* 4. Average delivered order value including shipping. */
+SELECT
+    ROUND(AVG(final_amount), 2) AS average_amount
+FROM orders_clean
+WHERE order_status = 'Delivered';
+
+/* 5. Monthly delivered order value, newest month first. */
 SELECT
     DATE_FORMAT(order_date, '%Y-%m') AS sales_month,
-    COUNT(*) AS delivered_orders,
-    ROUND(SUM(gross_amount), 2) AS merchandise_revenue,
-    ROUND(SUM(final_amount), 2) AS order_value_including_shipping
+    COUNT(*) AS delivered_order,
+    ROUND(SUM(final_amount), 2) AS monthly_revenue
 FROM orders_clean
 WHERE order_status = 'Delivered'
 GROUP BY DATE_FORMAT(order_date, '%Y-%m')
-ORDER BY sales_month;
+ORDER BY sales_month DESC;
 
-/* 4. October 2024 vs October 2025 comparison.
-   The first percentage is merchandise revenue growth; the second includes shipping.
-*/
-WITH monthly_sales AS (
-    SELECT
-        DATE_FORMAT(order_date, '%Y-%m') AS sales_month,
-        SUM(gross_amount) AS merchandise_revenue,
-        SUM(final_amount) AS order_value_including_shipping,
-        COUNT(*) AS delivered_orders
-    FROM orders_clean
-    WHERE order_status = 'Delivered'
-    GROUP BY DATE_FORMAT(order_date, '%Y-%m')
-),
-october_comparison AS (
-    SELECT
-        MAX(CASE WHEN sales_month = '2024-10' THEN merchandise_revenue END) AS merch_oct_2024,
-        MAX(CASE WHEN sales_month = '2025-10' THEN merchandise_revenue END) AS merch_oct_2025,
-        MAX(CASE WHEN sales_month = '2024-10' THEN order_value_including_shipping END) AS order_value_oct_2024,
-        MAX(CASE WHEN sales_month = '2025-10' THEN order_value_including_shipping END) AS order_value_oct_2025,
-        MAX(CASE WHEN sales_month = '2024-10' THEN delivered_orders END) AS orders_oct_2024,
-        MAX(CASE WHEN sales_month = '2025-10' THEN delivered_orders END) AS orders_oct_2025
-    FROM monthly_sales
-)
+/* 6. Compare delivered orders and delivered order value in Oct 2024 and Oct 2025. */
 SELECT
-    orders_oct_2024,
-    orders_oct_2025,
-    ROUND(merch_oct_2024, 2) AS merchandise_revenue_oct_2024,
-    ROUND(merch_oct_2025, 2) AS merchandise_revenue_oct_2025,
-    ROUND((merch_oct_2025 - merch_oct_2024) * 100.0 / NULLIF(merch_oct_2024, 0), 2) AS merchandise_revenue_yoy_change_pct,
-    ROUND(order_value_oct_2024, 2) AS order_value_oct_2024,
-    ROUND(order_value_oct_2025, 2) AS order_value_oct_2025,
-    ROUND((order_value_oct_2025 - order_value_oct_2024) * 100.0 / NULLIF(order_value_oct_2024, 0), 2) AS order_value_yoy_change_pct
-FROM october_comparison;
-
-/* 5. Delivered order counts and merchandise revenue by sales channel. */
-SELECT
-    sales_channel,
-    COUNT(*) AS delivered_orders,
-    ROUND(SUM(gross_amount), 2) AS merchandise_revenue,
-    ROUND(AVG(final_amount), 2) AS average_order_value_including_shipping
+    DATE_FORMAT(order_date, '%Y-%m') AS sales_month,
+    COUNT(*) AS delivered_order,
+    ROUND(SUM(final_amount), 2) AS monthly_revenue
 FROM orders_clean
 WHERE order_status = 'Delivered'
-GROUP BY sales_channel
-ORDER BY merchandise_revenue DESC;
+  AND DATE_FORMAT(order_date, '%Y-%m') IN ('2024-10', '2025-10')
+GROUP BY DATE_FORMAT(order_date, '%Y-%m')
+ORDER BY sales_month;
 
-/* 6. Customer acquisition channel: delivered activity among all customers. */
+/* 7. Calculate the two October delivered order values using conditional aggregation. */
 SELECT
-    c.acquisition_channel,
-    COUNT(DISTINCT c.customer_id) AS customers,
-    COUNT(DISTINCT o.customer_id) AS customers_with_delivered_orders,
-    COUNT(DISTINCT o.order_id) AS delivered_orders,
-    ROUND(COALESCE(SUM(o.gross_amount), 0), 2) AS delivered_merchandise_revenue
-FROM customers_clean AS c
-LEFT JOIN orders_clean AS o
-    ON c.customer_id = o.customer_id
-   AND o.order_status = 'Delivered'
-GROUP BY c.acquisition_channel
-ORDER BY delivered_merchandise_revenue DESC;
+    ROUND(SUM(CASE WHEN DATE_FORMAT(order_date, '%Y-%m') = '2024-10'
+                   THEN final_amount ELSE 0 END), 2) AS revenue_oct_2024,
+    ROUND(SUM(CASE WHEN DATE_FORMAT(order_date, '%Y-%m') = '2025-10'
+                   THEN final_amount ELSE 0 END), 2) AS revenue_oct_2025
+FROM orders_clean
+WHERE order_status = 'Delivered';
 
-/* 7. Repeat purchasers based on delivered orders. */
-WITH customer_order_counts AS (
-    SELECT customer_id, COUNT(DISTINCT order_id) AS delivered_order_count
-    FROM orders_clean
-    WHERE order_status = 'Delivered'
-    GROUP BY customer_id
-)
+/* 8. Percentage change in delivered order value from Oct 2024 to Oct 2025. */
 SELECT
-    COUNT(*) AS customers_with_delivered_orders,
-    SUM(delivered_order_count >= 2) AS repeat_customers,
-    ROUND(SUM(delivered_order_count >= 2) * 100.0 / COUNT(*), 2) AS repeat_customer_pct
-FROM customer_order_counts;
+    ROUND(
+        (
+            SUM(CASE WHEN DATE_FORMAT(order_date, '%Y-%m') = '2025-10'
+                     THEN final_amount ELSE 0 END)
+            -
+            SUM(CASE WHEN DATE_FORMAT(order_date, '%Y-%m') = '2024-10'
+                     THEN final_amount ELSE 0 END)
+        )
+        /
+        NULLIF(
+            SUM(CASE WHEN DATE_FORMAT(order_date, '%Y-%m') = '2024-10'
+                     THEN final_amount ELSE 0 END),
+            0
+        ) * 100,
+        2
+    ) AS revenue_change_pct
+FROM orders_clean
+WHERE order_status = 'Delivered';
