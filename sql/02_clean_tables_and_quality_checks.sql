@@ -12,6 +12,8 @@ SELECT
     TRIM(customer_name) AS customer_name,
     TRIM(city) AS city,
     TRIM(state) AS state,
+    TRIM(gender) AS gender,
+    TRIM(age_group) AS age_group,
     STR_TO_DATE(TRIM(signup_date), '%d-%m-%Y') AS signup_date,
     TRIM(acquisition_channel) AS acquisition_channel
 FROM customer_raw;
