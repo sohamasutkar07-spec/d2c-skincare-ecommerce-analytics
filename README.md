@@ -4,7 +4,7 @@
 
 ## Project overview
 
-This project analyzes a synthetic direct-to-consumer skincare e-commerce dataset to understand sales performance, product economics, order outcomes, returns, and customer reviews.
+This project analyzes a synthetic direct-to-consumer skincare e-commerce dataset to understand sales performance, product economics, order outcomes, returns, and customer reviews. The SQL files are limited to the analyses covered in the guided project; no extra advanced analysis has been added.
 
 The analysis is designed to answer practical business questions:
 - How are orders distributed by status?
@@ -46,7 +46,7 @@ Main relationships:
 - Aggregations, filtering, grouping and sorting
 - Multi-table `JOIN`s
 - Conditional aggregation with `CASE`
-- Common table expressions (CTEs)
+- Common table expressions (CTEs) for the order-total reconciliation already covered in the project
 - Window functions for percentage calculations
 - KPI definition and business interpretation
 
@@ -102,7 +102,8 @@ These values were observed in the supplied synthetic data and should be rechecke
 │   ├── Returns.csv
 │   └── Reviews.csv
 └── docs/
-    └── SQL_REVIEW_NOTES.md
+    ├── SQL_REVIEW_NOTES.md
+    └── PROJECT_FINDINGS.md
 ```
 
 ## Limitations
