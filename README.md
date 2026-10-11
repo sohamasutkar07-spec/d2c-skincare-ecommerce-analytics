@@ -50,6 +50,22 @@ Main relationships:
 - Window functions for percentage calculations
 - KPI definition and business interpretation
 
+## GenAI-assisted workflow
+
+Generative AI was used as a learning and productivity aid during this project to:
+- break business questions into manageable SQL steps;
+- explain SQL concepts and troubleshoot syntax errors;
+- review query structure and clarify metric definitions; and
+- organize project documentation and findings.
+
+The project owner imported the CSV files, ran the queries in MySQL Workbench, checked outputs, and reviewed the business interpretation. AI suggestions were treated as drafts to verify, not as proof that a query or result was correct.
+
+## Additional GenAI learning
+
+**GenAI Powered Data Analytics Job Simulation — Forage (October 2026)**
+
+The separately completed simulation covered exploratory data analysis and risk profiling, AI-assisted delinquency prediction, business reporting and data storytelling for collections strategy, and implementation of an AI-driven collections strategy. This simulation is a separate learning credential, not part of the skincare dataset analysis.
+
 ## Metric definitions
 
 - **Delivered orders:** Orders where `order_status = 'Delivered'`.
@@ -103,7 +119,8 @@ These values were observed in the supplied synthetic data and should be rechecke
 │   └── Reviews.csv
 └── docs/
     ├── SQL_REVIEW_NOTES.md
-    └── PROJECT_FINDINGS.md
+    ├── PROJECT_FINDINGS.md
+    └── RESUME_BULLETS.md
 ```
 
 ## Limitations
